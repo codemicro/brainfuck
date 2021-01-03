@@ -12,7 +12,6 @@ import (
 var (
 	ErrorNegativePointer = errors.New("runtime error: pointer cannot be negative")
 	// ErrorPointerOutOfRange = errors.New("runtime error: pointer exceeded maximum value")
-	ErrorEOF              = errors.New("runtime error: got end-of-file")
 	ErrorNoLoops          = errors.New("runtime error: attempt to end loop without corresponding starter (has this been parsed?)")
 	ErrorIllegalCharacter = errors.New("runtime error: illegal character")
 )
@@ -49,9 +48,10 @@ func Run(in []byte) error {
 			_, err := os.Stdin.Read(inp)
 			if err != nil {
 				if errors.Is(err, io.EOF) {
-					return ErrorEOF
+					inp[0] = 0
+				} else {
+					return fmt.Errorf("runtime error: unable to read from input (%s)", err.Error())
 				}
-				return fmt.Errorf("runtime error: unable to read from input (%s)", err.Error())
 			}
 			tape.Set(ptr, inp[0])
 		case def.SymbolLoopStart:
