@@ -1,9 +1,9 @@
 package run
 
 import (
+	"bufio"
 	"errors"
 	"fmt"
-	"io"
 	"os"
 
 	"github.com/codemicro/brainfuck/internal/def"
@@ -21,6 +21,7 @@ func Run(in []byte) error {
 	tape := make(memoryTape)
 
 	var loopStarters intStack
+	var outputBuffer, inputBuffer []byte
 
 	for pc < len(in) {
 
@@ -30,30 +31,46 @@ func Run(in []byte) error {
 		case def.SymbolIncPtr:
 			// increment the data pointer.
 			ptr += 1
+
 		case def.SymbolDecPtr:
 			// decrement the data pointer.
 			ptr -= 1
+
 		case def.SymbolIncVal:
 			// increment the byte at the data pointer.
 			tape.ApplyDelta(ptr, 1)
+
 		case def.SymbolDecVal:
 			// decrement the byte at the data pointer.
 			tape.ApplyDelta(ptr, -1)
+
 		case def.SymbolOutput:
 			// output the byte at the data pointer.
-			fmt.Print(string(tape.Get(ptr)))
+			v := tape.Get(ptr)
+			if v == 10 {
+				fmt.Fprintln(os.Stdout, string(outputBuffer))
+				outputBuffer = []byte{}
+			} else {
+				outputBuffer = append(outputBuffer, v)
+			}
+
 		case def.SymbolInput:
 			// accept one byte of input, storing its value in the byte at the data pointer.
-			inp := make([]byte, 1)
-			_, err := os.Stdin.Read(inp)
-			if err != nil {
-				if errors.Is(err, io.EOF) {
-					inp[0] = 0
-				} else {
+
+			if len(inputBuffer) == 0 {
+				scanner := bufio.NewScanner(os.Stdin)
+				scanner.Scan()
+				inputBuffer = append(scanner.Bytes(), 10)
+				if err := scanner.Err(); err != nil {
 					return fmt.Errorf("runtime error: unable to read from input (%s)", err.Error())
 				}
 			}
-			tape.Set(ptr, inp[0])
+
+			if len(inputBuffer) != 0 {
+				tape.Set(ptr, inputBuffer[0])
+				inputBuffer = inputBuffer[1:]
+			}
+
 		case def.SymbolLoopStart:
 			// if the byte at the data pointer is zero, then instead of moving the instruction pointer forward to the next command, jump it forward to the command after the matching ] command.
 			if tape.Get(ptr) == 0 {
@@ -90,6 +107,7 @@ func Run(in []byte) error {
 					return ErrorNoLoops
 				}
 			}
+
 		default:
 			return ErrorIllegalCharacter
 		}
