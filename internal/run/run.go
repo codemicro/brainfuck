@@ -10,10 +10,10 @@ import (
 )
 
 var (
-	ErrorNegativePointer = errors.New("runtime error: pointer cannot be negative")
-	// ErrorPointerOutOfRange = errors.New("runtime error: pointer exceeded maximum value")
-	ErrorNoLoops          = errors.New("runtime error: attempt to end loop without corresponding starter (has this been parsed?)")
-	ErrorIllegalCharacter = errors.New("runtime error: illegal character")
+	ErrorNegativePointer = errors.New("interpreter error: pointer cannot be negative")
+	// ErrorPointerOutOfRange = errors.New("interpreter error: pointer exceeded maximum value")
+	ErrorNoLoops          = errors.New("interpreter error: attempt to end loop without corresponding starter (has this been parsed?)")
+	ErrorIllegalCharacter = errors.New("interpreter error: illegal character")
 )
 
 func Run(in []byte, input io.Reader, output io.Writer, bufferOutput bool) error {
