@@ -16,7 +16,7 @@ var (
 	ErrorIllegalCharacter = errors.New("runtime error: illegal character")
 )
 
-func Run(in []byte) error {
+func Run(in []byte, bufferOutput bool) error {
 	var ptr, pc int
 	tape := make(memoryTape)
 
@@ -48,10 +48,18 @@ func Run(in []byte) error {
 			// output the byte at the data pointer.
 			v := tape.Get(ptr)
 			if v == 10 {
-				fmt.Fprintln(os.Stdout, string(outputBuffer))
-				outputBuffer = []byte{}
+				if bufferOutput {
+					fmt.Fprintln(os.Stdout, string(outputBuffer))
+					outputBuffer = []byte{}
+				} else {
+					fmt.Fprintln(os.Stdout)
+				}
 			} else {
-				outputBuffer = append(outputBuffer, v)
+				if bufferOutput {
+					outputBuffer = append(outputBuffer, v)
+				} else {
+					fmt.Fprint(os.Stdout, string(v))
+				}
 			}
 
 		case def.SymbolInput:
