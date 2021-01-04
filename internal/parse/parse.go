@@ -14,7 +14,7 @@ func String(in string) ([]byte, error) {
 	return parser([]byte(in))
 }
 
-func Byte(in []byte) ([]byte, error) {
+func Bytes(in []byte) ([]byte, error) {
 	return parser(in)
 }
 
