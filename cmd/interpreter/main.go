@@ -2,101 +2,68 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
+	"os"
 
 	"github.com/codemicro/brainfuck/internal/parse"
 	"github.com/codemicro/brainfuck/internal/run"
+	"github.com/urfave/cli/v2"
 )
 
 // http://www.hevanet.com/cristofd/brainfuck/
 
+const bufferOutput = "bufferOutput"
+const inputString = "command"
+
 func main() {
-	//parsed, err := parse.String(`++++++++[>++++[>++>+++>+++>+<<<<-]>+>+>->>+[<]<-]>>.>---.+++++++..+++.>>.<-.<.+++.------.--------.>>+.>++.`)
+	app := &cli.App{
+		Name:  "run",
+		Usage: "run a brainfuck program",
+		Flags: []cli.Flag {
+			&cli.StringFlag{
+				Name: inputString,
+				Aliases: []string{"c"},
+				Usage: "executes an input string. Takes precendence over any file",
+			},
+			&cli.BoolFlag{
+				Name: bufferOutput,
+				Aliases: []string{"b"},
+				Usage: "if true, disables output buffering",
+			},
+		},
+		Action: func(c *cli.Context) error {
 
-	parsed, err := parse.String(`--->--->>>>->->->>>>>-->>>>>>>>>>>>>>>>>>+>>++++++++++[
-		<<++[
-		  --<+<<+<<+>>>>[
-			>[<->>+++>>[-]<<<+[<++>>+>>-<<<--]]+>+++++[>>++++++++++<<-]
-			>>-.[-]>>+[<<<<+>>+>>-]<<<<<<[>+<-]<<
-		  ]++++++++++.[-]>++
-		]-->>[-->[-]>]<<[
-		  >>--[
-			-[
-			  -[
-				-[
-				  -[
-					-[
-					  --[<+++++++>>+<+]<-.----->,[<->-]
-					  -->[[-<<]>>>>]+<[<[-]>>-]>[,[-]<]
-					]<[
-					  +[[<<]-[>>]<+<-]>[-<+]<<[<<]-<[>[+>>]>[>]+>[-]]
-					  <-[[+>>]<-->>[>]++++>>+>]
-					]>
-				  ]<[
-					>-[+<+++]+<+++[+[---->]<<<<<<[>]>[<<[-]>>[>]>]]
-					>[<+[---->]+[<]<[[>>]+>++++++++>+>]>>[[>]>>>]<<]
-					<<+>++>
-				  ]>
-				]<[
-				  -[[>+>+<<-]>[<+>-]+++>>+++++>>]
-				  <[<<++[-->>[-]++>]>[[-]+>[<<+>>-]>]<]
-				]>
-			  ]<[
-				-[
-				  --[+<<<<--[+>[-]>[<<+>+>-]<<[>>+<<-]]++[>]]
-				  <<[>>+>+<<<-]>>>[<<<+>>>-]>
-				]<[<<<[-]+++>[-]>[<+>>>+<<-]+>>>]+>
-			  ]>
-			]<[
-			  +[[<]<<[<<]-<->>+>[>>]>[>]<-]<[<]<<+<++[[>+<-]++<[<<->>+]<++]<
-			  <<<<<<      +> > >+> > >+[
-			  <<<               ->+>+>+[
-			  <<<<<<<   +>->+> > >->->+[
-			  <<<<<         ->+>+> >+>+[
-			  <<<<            ->->+>->+[
-			  <<<<<<<<+>-> >+> > >->+>+[
-			  <<<<<         -> >+> >->+[
-			  <<<<            +>->+> >+]]]]]]]
-			  +++[[>+<-]<+++]--->>[[<->-]<+++>>]++[[<->-]>>]>[>]
-			]<
-		  ]
-		]<
-	  ]`)
+			var parsed []byte
 
-	// parsed, err := parse.String(`Calculate the value 256 and test if it's zero
-	// If the interpreter errors on overflow this is where it'll happen
-	// ++++++++[>++++++++<-]>[<++++>-]
-	// +<[>-<
-	// 	Not zero so multiply by 256 again to get 65536
-	// 	[>++++<-]>[<++++++++>-]<[>++++++++<-]
-	// 	+>[>
-	// 		# Print "32"
-	// 		++++++++++[>+++++<-]>+.-.[-]<
-	// 	<[-]<->] <[>>
-	// 		# Print "16"
-	// 		+++++++[>+++++++<-]>.+++++.[-]<
-	// <<-]] >[>
-	// 	# Print "8"
-	// 	++++++++[>+++++++<-]>.[-]<
-	// <-]<
-	// # Print " bit cells\n"
-	// +++++++++++[>+++>+++++++++>+++++++++>+<<<<-]>-.>-.+++++++.+++++++++++.<.
-	// >>.++.+++++++..<-.>>-
-	// Clean up used cells.
-	// [[-]<]`)
+			if inputString := c.String(inputString); inputString != "" {
+				var err error
+				parsed, err = parse.String(inputString)
+				if err != nil {
+					return err
+				}
+			} else if inputFile := c.Args().Get(0); inputFile != "" {
+				f, err := os.Open(inputFile)
+				if err != nil {
+					return fmt.Errorf("unable to open input file %s: %s", inputFile, err.Error())
+				}
+				x, err := ioutil.ReadAll(f)
+				if err != nil {
+					return fmt.Errorf("unable to read input file %s: %s", inputFile, err.Error())
+				}
 
+				parsed, err = parse.Bytes(x)
+				if err != nil {
+					return err
+				}
+			}
+
+			return run.Run(parsed, os.Stdin, os.Stdout, !c.Bool(bufferOutput))
+		},
+	}
+
+	err := app.Run(os.Args)
 	if err != nil {
-		panic(err)
+		fmt.Fprintln(os.Stderr, err.Error())
+		os.Exit(1)
 	}
-
-	for _, x := range parsed {
-		fmt.Print(string(x))
-	}
-	fmt.Println()
-
-	err = run.Run(parsed, false)
-
-	if err != nil {
-		panic(err)
-	}
-
 }
