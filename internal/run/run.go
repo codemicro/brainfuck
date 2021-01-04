@@ -20,7 +20,7 @@ func Run(in []byte) error {
 	var ptr, pc int
 	tape := make(memoryTape)
 
-	var loopStarters stack
+	var loopStarters intStack
 
 	for pc < len(in) {
 

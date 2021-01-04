@@ -26,15 +26,15 @@ func (t memoryTape) ApplyDelta(ptr, delta int) {
 
 var ErrorEmptyStack = errors.New("stack: stack is empty")
 
-type stack struct {
+type intStack struct {
 	arr []int
 }
 
-func (c *stack) Push(name int) {
+func (c *intStack) Push(name int) {
 	c.arr = append(c.arr, name)
 }
 
-func (c *stack) Pop() (int, error) {
+func (c *intStack) Pop() (int, error) {
 	len := len(c.arr)
 	if len > 0 {
 		v := c.arr[len-1]
@@ -44,7 +44,7 @@ func (c *stack) Pop() (int, error) {
 	return 0, ErrorEmptyStack
 }
 
-func (c *stack) Top() (int, error) {
+func (c *intStack) Top() (int, error) {
 	len := len(c.arr)
 	if len > 0 {
 		return c.arr[len-1], nil
