@@ -4,7 +4,7 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
-	"os"
+	"io"
 
 	"github.com/codemicro/brainfuck/internal/def"
 )
@@ -16,7 +16,7 @@ var (
 	ErrorIllegalCharacter = errors.New("runtime error: illegal character")
 )
 
-func Run(in []byte, bufferOutput bool) error {
+func Run(in []byte, input io.Reader, output io.Writer, bufferOutput bool) error {
 	var ptr, pc int
 	tape := make(memoryTape)
 
@@ -49,16 +49,16 @@ func Run(in []byte, bufferOutput bool) error {
 			v := tape.Get(ptr)
 			if v == 10 {
 				if bufferOutput {
-					fmt.Fprintln(os.Stdout, string(outputBuffer))
+					fmt.Fprintln(output, string(outputBuffer))
 					outputBuffer = []byte{}
 				} else {
-					fmt.Fprintln(os.Stdout)
+					fmt.Fprintln(output)
 				}
 			} else {
 				if bufferOutput {
 					outputBuffer = append(outputBuffer, v)
 				} else {
-					fmt.Fprint(os.Stdout, string(v))
+					fmt.Fprint(output, string(v))
 				}
 			}
 
@@ -66,7 +66,7 @@ func Run(in []byte, bufferOutput bool) error {
 			// accept one byte of input, storing its value in the byte at the data pointer.
 
 			if len(inputBuffer) == 0 {
-				scanner := bufio.NewScanner(os.Stdin)
+				scanner := bufio.NewScanner(input)
 				scanner.Scan()
 				inputBuffer = append(scanner.Bytes(), 10)
 				if err := scanner.Err(); err != nil {
