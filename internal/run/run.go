@@ -128,6 +128,10 @@ func Run(in []byte, input io.Reader, output io.Writer, bufferOutput bool) error 
 
 	}
 
+	if len(outputBuffer) != 0 {
+		fmt.Fprintln(output, string(outputBuffer))
+	}
+
 	return nil
 
 }
