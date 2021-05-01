@@ -12,7 +12,7 @@ import (
 
 // http://www.hevanet.com/cristofd/brainfuck/
 
-const bufferOutput = "bufferOutput"
+const bufferOutput = "disableOutputBuffer"
 const inputString = "command"
 
 func main() {
@@ -28,7 +28,7 @@ func main() {
 			&cli.BoolFlag{
 				Name: bufferOutput,
 				Aliases: []string{"b"},
-				Usage: "if true, disables output buffering",
+				Usage: "disables output buffering",
 			},
 		},
 		Action: func(c *cli.Context) error {
@@ -42,11 +42,7 @@ func main() {
 					return err
 				}
 			} else if inputFile := c.Args().Get(0); inputFile != "" {
-				f, err := os.Open(inputFile)
-				if err != nil {
-					return fmt.Errorf("unable to open input file %s: %s", inputFile, err.Error())
-				}
-				x, err := ioutil.ReadAll(f)
+				x, err := ioutil.ReadFile(inputFile)
 				if err != nil {
 					return fmt.Errorf("unable to read input file %s: %s", inputFile, err.Error())
 				}
