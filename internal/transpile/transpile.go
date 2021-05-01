@@ -19,9 +19,7 @@ func countPrefix(dat []byte, startPos int, symbol byte) int {
 	return n
 }
 
-func Transpile(in []byte) ([]byte, error) {
-
-	transpiler := languages.NewGo()
+func Transpile(in []byte, transpiler languages.Language) ([]byte, error) {
 
 	transpiler.Header()
 	transpiler.MainStart()

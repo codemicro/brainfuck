@@ -1,9 +1,11 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"github.com/codemicro/brainfuck/internal/parse"
 	"github.com/codemicro/brainfuck/internal/transpile"
+	"github.com/codemicro/brainfuck/internal/transpile/languages"
 	"github.com/urfave/cli/v2"
 	"io/ioutil"
 	"os"
@@ -11,6 +13,7 @@ import (
 
 const inputString = "command"
 const outputFile = "outputFile"
+const outputLang = "outputLanguage"
 
 func main() {
 	app := &cli.App{
@@ -27,6 +30,12 @@ func main() {
 				Aliases: []string{"o"},
 				Required: true,
 				Usage: "output filename",
+			},
+			&cli.StringFlag{
+				Name: outputLang,
+				Aliases: []string{"l"},
+				DefaultText: "go",
+				Usage: "language for transpiled output",
 			},
 		},
 		Action: func(c *cli.Context) error {
@@ -51,7 +60,16 @@ func main() {
 				}
 			}
 
-			transpiled, err := transpile.Transpile(parsed)
+			ol := c.String(outputLang)
+			if ol == "" {
+				ol = "go"
+			}
+			lang, found := languages.Index[ol]
+			if !found {
+				return errors.New("unknown output language")
+			}
+
+			transpiled, err := transpile.Transpile(parsed, lang)
 			if err != nil {
 				return err
 			}
