@@ -6,6 +6,4 @@ A Brainfuck interpreter written in Golang.
 * `0x0A` represents a new line
 
 ### TODO:
-* Basic CLI
 * BF->Go transpiler
-* Input/output buffer selection
